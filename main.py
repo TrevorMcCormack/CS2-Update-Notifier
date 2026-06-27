@@ -72,6 +72,4 @@ def send_email(title, date, content):
 if __name__ == "__main__":
     title, published_date, guid, description = fetch_update()
     formatted_content = parse_description(description)
-    print(title)
-    print(published_date)
-    print(formatted_content)
+    send_email(title, published_date, formatted_content)

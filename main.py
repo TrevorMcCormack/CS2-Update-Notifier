@@ -2,10 +2,13 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 import os
-from dotenv import load_dotenv
 import boto3
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
-load_dotenv()
 
 class UpdateParser(HTMLParser):
     def __init__(self):

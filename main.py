@@ -4,8 +4,9 @@ from html.parser import HTMLParser
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+import boto3
 
 load_dotenv()
 
@@ -69,12 +70,46 @@ def send_email(title, date, content):
         Server.login(sender, app_password)
         Server.sendmail(sender, receiver, message.as_string())
 
+def get_last_guid():
+    dynamodb = boto3.resource('dynamodb', region_name='us-east-2')
+    table = dynamodb.Table('CS2-update-tracker')
+    response = table.get_item(Key={'id': 'last_update'})
+    return response.get('Item', {}).get('guid', None)
+
+def save_guid(guid):
+    dynamodb = boto3.resource('dynamodb', region_name='us-east-2')
+    table = dynamodb.Table('CS2-update-tracker')
+    table.put_item(Item={'id': 'last_update', 'guid': guid})
+
 def lambda_handler(event, context):
     title, published_date, guid, description = fetch_update()
+
+    last_guid = get_last_guid()
+    if guid == last_guid:
+        print("No new update")
+        return {
+            'statusCode': 200,
+            'body': 'No new update'
+        }
+
     formatted_content = parse_description(description)
     send_email(title, published_date, formatted_content)
+    print(f"Email sent for update: {title} - {published_date}")
+    
+    save_guid(guid)
+    return {
+        'statusCode': 200,
+        'body': 'Email sent successfully'
+    }
 
 if __name__ == "__main__":
     title, published_date, guid, description = fetch_update()
-    formatted_content = parse_description(description)
-    send_email(title, published_date, formatted_content)
+    last_guid = get_last_guid()
+
+    if guid == last_guid:
+        print("No new update")
+    else:
+        formatted_content = parse_description(description)
+        send_email(title, published_date, formatted_content)
+        save_guid(guid)
+        print(f"Email sent for update: {title} - {published_date}")

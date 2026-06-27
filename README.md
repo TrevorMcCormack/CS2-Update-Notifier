@@ -10,7 +10,7 @@ The full pipeline runs on a schedule every 30 minutes:
 2. **Fetch** — The function fetches the CS2 RSS feed (XML) using Python's `urllib` and parses it with `xml.etree.ElementTree` to extract the latest update's title, date, GUID, and raw HTML description.
 3. **Dedup check** — The GUID of the latest update is compared against the last-seen GUID stored in a DynamoDB table (`CS2-update-tracker`). If they match, execution stops — no duplicate emails.
 4. **Parse** — If the update is new, a custom `HTMLParser` subclass (`UpdateParser`) converts the raw HTML patch notes into clean, readable plain text, turning `<li>` elements into bullet points and preserving section headers.
-5. **Email** — The formatted patch notes are sent as a plain-text email via AWS SES (Gmail SMTP locally) with the subject line `CS2 Update - <date>`.
+5. **Email** — The formatted patch notes are sent as a plain-text email via AWS SES with the subject line `CS2 Update - <date>`.
 6. **Save** — The new GUID is written back to DynamoDB so future runs know this update has already been processed.
 
 ## Tech Stack
@@ -21,14 +21,13 @@ The full pipeline runs on a schedule every 30 minutes:
 | Compute | AWS Lambda |
 | Scheduler | AWS EventBridge (every 30 minutes) |
 | State | AWS DynamoDB |
-| Email (prod) | AWS SES |
-| Email (local) | Gmail SMTP |
+| Email | AWS SES |
 | Feed source | XML RSS via `urllib` + `xml.etree.ElementTree` |
 | HTML parsing | Custom `HTMLParser` subclass |
 
 ## Local Setup
 
-**Prerequisites:** Python 3.12, pip, AWS credentials configured locally (for DynamoDB access)
+**Prerequisites:** Python 3.12, pip, AWS credentials configured locally (for DynamoDB and SES access)
 
 **1. Clone the repository**
 ```bash
@@ -41,13 +40,10 @@ cd "CS2-Update-Notifier"
 pip install -r requirements.txt
 ```
 
-**3. Create a `.env` file** in the project root with your Gmail credentials:
+**3. Create a `.env` file** in the project root:
 ```
 EMAIL_ADDRESS=your_email@gmail.com
-EMAIL_APP_PASSWORD=your_gmail_app_password
 ```
-
-> You'll need a [Gmail App Password](https://support.google.com/accounts/answer/185833), not your regular account password.
 
 **4. Run locally**
 ```bash

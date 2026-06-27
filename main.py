@@ -1,9 +1,6 @@
 import urllib.request
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
 import boto3
@@ -55,20 +52,17 @@ def parse_description(description):
     return parser.result
 
 def send_email(title, date, content):
-    sender = os.environ.get("EMAIL_ADDRESS")
-    receiver = os.environ.get("EMAIL_ADDRESS")
-    app_password = os.environ.get("EMAIL_APP_PASSWORD")
-    subject = f"CS2 Update - {date}"
-
-    message = MIMEMultipart()
-    message["From"] = sender
-    message["To"] = receiver
-    message["Subject"] = subject
-    message.attach(MIMEText(content, "plain"))
-    
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as Server:
-        Server.login(sender, app_password)
-        Server.sendmail(sender, receiver, message.as_string())
+    client = boto3.client('ses', region_name='us-east-2')
+    client.send_email(
+        Source=os.environ.get("EMAIL_ADDRESS"),
+        Destination={
+            'ToAddresses': [os.environ.get("EMAIL_ADDRESS")]
+        },
+        Message={
+            'Subject': {'Data': f"CS2 Update - {date}"},
+            'Body': {'Text': {'Data': content}}
+        }
+    )
 
 def get_last_guid():
     dynamodb = boto3.resource('dynamodb', region_name='us-east-2')

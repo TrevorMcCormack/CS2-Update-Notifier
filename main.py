@@ -69,6 +69,11 @@ def send_email(title, date, content):
         Server.login(sender, app_password)
         Server.sendmail(sender, receiver, message.as_string())
 
+def lambda_handler(event, context):
+    title, published_date, guid, description = fetch_update()
+    formatted_content = parse_description(description)
+    send_email(title, published_date, formatted_content)
+
 if __name__ == "__main__":
     title, published_date, guid, description = fetch_update()
     formatted_content = parse_description(description)

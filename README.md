@@ -33,7 +33,7 @@ The full pipeline runs on a schedule every 30 minutes:
 **1. Clone the repository**
 ```bash
 git clone https://github.com/TrevorMcCormack/CS2-Update-Notifier.git
-cd "CS2 Update Email System"
+cd "CS2-Update-Notifier"
 ```
 
 **2. Install dependencies**
